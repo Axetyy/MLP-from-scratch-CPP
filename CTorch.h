@@ -2,14 +2,15 @@
 #include <vector>
 #include <random>
 #include <cmath>
+#include <stdexcept>
+#include <string>
 #define eps 1e-9
 
 class Tensor
 {
 public:
     int rows, cols;
-
-    std::vector<float> data; /// row-major
+    std::vector<float> data;
 
     Tensor() : rows(0), cols(0) {}
     Tensor(int rows, int cols) : rows(rows), cols(cols), data(rows * cols) {};
@@ -70,6 +71,7 @@ public:
             v = std::max(0.0f, v);
         }
     }
+
     static void SoftMax(Tensor &X)
     {
         for (int i = 0; i < X.rows; i++)
@@ -101,9 +103,14 @@ public:
         return loss / probabilites.rows;
     }
 };
-Tensor softmax_crossentropy_backward(const Tensor &logits, const std::vector<int> y)
+Tensor softmax_crossentropy_backward(const Tensor &logits, const std::vector<int> &y)
 {
-    Tensor grad(logits.rows, logits.cols);
+    Tensor grad(logits.rows, logits.cols); // grad tensor
+
+    if ((int)y.size() != logits.rows)
+    {
+        throw std::runtime_error("softmax_crossentropy_backward: label vector size (" + std::to_string(y.size()) + ") does not match logits.rows (" + std::to_string(logits.rows) + ")");
+    }
 
     for (int i = 0; i < logits.rows; i++)
     {
@@ -117,25 +124,25 @@ Tensor softmax_crossentropy_backward(const Tensor &logits, const std::vector<int
         {
             sum_exp += std::exp(logits(i, j) - max_val);
         }
+        // softmax
         for (int j = 0; j < logits.cols; j++)
         {
-            float p = std::exp(logits(i, j) - max_val) / sum_exp;
-            grad(i, j) = p;
+            float probs = std::exp(logits(i, j) - max_val) / sum_exp;
+            grad(i, j) = probs;
         }
-        grad(i, y[i]) -= 1.0f;
+        int label = y[i];
+        if (label < 0 || label >= logits.cols)
+        {
+            throw std::runtime_error("softmax_crossentropy_backward: label out of range at index " + std::to_string(i) + ": " + std::to_string(label));
+        }
+        grad(i, label) -= 1.0f; /// cross entropy
     }
     float inv_bs = 1.0 / logits.rows; // average
     for (float &v : grad.data)
     {
-        v *= inv_bs;
+        v *= inv_bs; // actualize grads
     }
     return grad;
-}
-float randf(float a, float b)
-{
-    static std::mt19937 gen(67);
-    std::uniform_real_distribution<float> dist(a, b);
-    return dist(gen);
 }
 
 void relu_backward(Tensor &grad, const Tensor &inputs)
@@ -145,3 +152,53 @@ void relu_backward(Tensor &grad, const Tensor &inputs)
         grad.data[i] = (inputs.data[i] > 0.0f) ? grad.data[i] : 0.0f;
     }
 }
+
+class Torch
+{
+public:
+    static float randf(float a, float b)
+    {
+        static std::mt19937 gen(67);
+        std::uniform_real_distribution<float> dist(a, b);
+        return dist(gen);
+    }
+    static std::vector<int> argmax(const Tensor &X, int dim = 1)
+    {
+        std::vector<int> result;
+        if (dim == 1)
+        {
+            for (int i = 0; i < X.rows; i++)
+            {
+                int idx = 0;
+                float maxi = X(i, 0);
+                for (int j = 1; j < X.cols; j++)
+                {
+                    if (X(i, j) > maxi)
+                    {
+                        maxi = X(i, j);
+                        idx = j;
+                    }
+                }
+                result.push_back(idx);
+            }
+        }
+        else if (dim == 0)
+        {
+            for (int j = 0; j < X.cols; j++)
+            {
+                int idx = 0;
+                float maxv = X(0, j);
+                for (int i = 1; i < X.rows; i++)
+                {
+                    if (X(i, j) > maxv)
+                    {
+                        maxv = X(i, j);
+                        idx = i;
+                    }
+                }
+                result.push_back(idx);
+            }
+        }
+        return result;
+    }
+};

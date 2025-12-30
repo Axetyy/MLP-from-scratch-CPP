@@ -1,5 +1,5 @@
 #pragma once
-#include "Tensor.h"
+#include "CTorch.h"
 
 class Linear
 {
@@ -15,7 +15,7 @@ public:
         float scale = std::sqrt(2.0f / in_features);
         for (float &v : Weights.data)
         {
-            v = randf(-scale, scale);
+            v = Torch::randf(-scale, scale);
         }
     }
     Tensor forward(const Tensor &X)
@@ -40,3 +40,13 @@ public:
         return dX;
     }
 };
+
+float accuracy_score(const Tensor &probs, const std::vector<int> &labels)
+{
+    std::vector<int> preds = Torch::argmax(probs, 1);
+    int correct = 0;
+    for (size_t i = 0; i < preds.size(); i++)
+        if (preds[i] == labels[i])
+            correct++;
+    return 1.0 * (correct) / preds.size();
+}
