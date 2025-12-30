@@ -9,7 +9,7 @@ int main()
 {
     Tensor X_train;
     std::vector<int> y_train;
-    load_mnist_csv("mnist_train.csv", X_train, y_train);
+    load_mnist_csv("mnist_train_small.csv", X_train, y_train);
     std::cout << " Loaded set into memory " << X_train.rows << "x" << X_train.cols << "\n";
 
     Linear fc1(784, 128);
