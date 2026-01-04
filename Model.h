@@ -1,8 +1,9 @@
 #pragma once
-#include <vector>
-#include "CTorch.h"
 #include "Loader.h"
+#include "CTorch.h"
 #include "Module.h"
+#include <vector>
+#include <memory>
 
 class Model
 {

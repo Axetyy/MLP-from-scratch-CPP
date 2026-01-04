@@ -55,7 +55,7 @@ void Model::zero_grad()
         std::fill(layer->db.begin(), layer->db.end(), 0.0f);
     }
 }
-void Model::train(DataLoader &loader, int epochs = 10, int verbose = 1)
+void Model::train(DataLoader &loader, int epochs, int verbose)
 {
     for (int epoch = 1; epoch <= epochs; epoch++)
     {

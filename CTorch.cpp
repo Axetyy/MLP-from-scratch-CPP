@@ -1,5 +1,6 @@
 #include "CTorch.h"
 #include <cmath>
+#include <stdexcept>
 #include <algorithm>
 #include <random>
 
@@ -91,42 +92,42 @@ float Torch::randf(float a, float b)
     std::uniform_real_distribution<float> dist(a, b);
     return dist(gen);
 }
-std::vector<int> Torch::argmax(const Tensor &X, int dim = 1)
+std::vector<int> Torch::argmax(const Tensor &X, int dim)
+{
+    std::vector<int> result;
+    if (dim == 1)
     {
-        std::vector<int> result;
-        if (dim == 1)
+        for (int i = 0; i < X.rows; i++)
         {
-            for (int i = 0; i < X.rows; i++)
+            int idx = 0;
+            float maxi = X(i, 0);
+            for (int j = 1; j < X.cols; j++)
             {
-                int idx = 0;
-                float maxi = X(i, 0);
-                for (int j = 1; j < X.cols; j++)
+                if (X(i, j) > maxi)
                 {
-                    if (X(i, j) > maxi)
-                    {
-                        maxi = X(i, j);
-                        idx = j;
-                    }
+                    maxi = X(i, j);
+                    idx = j;
                 }
-                result.push_back(idx);
             }
+            result.push_back(idx);
         }
-        else if (dim == 0)
-        {
-            for (int j = 0; j < X.cols; j++)
-            {
-                int idx = 0;
-                float maxv = X(0, j);
-                for (int i = 1; i < X.rows; i++)
-                {
-                    if (X(i, j) > maxv)
-                    {
-                        maxv = X(i, j);
-                        idx = i;
-                    }
-                }
-                result.push_back(idx);
-            }
-        }
-        return result;
     }
+    else if (dim == 0)
+    {
+        for (int j = 0; j < X.cols; j++)
+        {
+            int idx = 0;
+            float maxv = X(0, j);
+            for (int i = 1; i < X.rows; i++)
+            {
+                if (X(i, j) > maxv)
+                {
+                    maxv = X(i, j);
+                    idx = i;
+                }
+            }
+            result.push_back(idx);
+        }
+    }
+    return result;
+}

@@ -4,7 +4,6 @@
 #include <vector>
 #include <utility>
 #include <random>
-
 #include "CTorch.h"
 
 void load_mnist_csv(const std::string &filename, Tensor &X, std::vector<int> &y);
@@ -15,9 +14,7 @@ public:
     Tensor data;
     std::vector<int> labels;
 
-    Dataset() = default;
-
-    explicit Dataset(const std::string &filename) {}
+    explicit Dataset(const std::string &filename);
 
     int size() const { return data.rows; }
     int num_features() const { return data.cols; }
